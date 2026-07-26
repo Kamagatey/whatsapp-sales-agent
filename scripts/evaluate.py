@@ -121,7 +121,13 @@ def evaluate_llm(sample_size: int = 30):
 
     with get_session() as session:
         from app.database.models import Product
-        products_by_id = {p.id: p for p in session.query(Product).all()}
+
+        products_by_id = {
+            p.id: {
+                "document_text": p.document_text
+            }
+            for p in session.query(Product).all()
+        }
 
     results = {}
     for prompt_name, system_prompt in PROMPT_VARIANTS.items():
@@ -132,7 +138,7 @@ def evaluate_llm(sample_size: int = 30):
                 product = products_by_id.get(item["product_id"])
                 if not product:
                     continue
-                context = product.document_text
+                context = product["document_text"]
                 start = time.time()
                 completion = client.chat.completions.create(
                     model=model,
