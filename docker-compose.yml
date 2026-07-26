@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: sales_agent_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sales_agent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sales_agent}
+      POSTGRES_DB: ${POSTGRES_DB:-sales_agent}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./app/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sales_agent}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sales_agent_api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: sales_agent_streamlit
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      API_BASE_URL: http://api:8000
+    depends_on:
+      - api
+    ports:
+      - "8501:8501"
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: sales_agent_grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: "grafana-postgresql-datasource"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+
+volumes:
+  pgdata:
+  grafana_data:

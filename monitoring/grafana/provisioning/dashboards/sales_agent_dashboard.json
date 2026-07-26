@@ -1,0 +1,101 @@
+{
+  "title": "Assistant Commercial WhatsApp — Monitoring",
+  "uid": "sales-agent-monitoring",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "time": { "from": "now-7d", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Nombre de conversations par jour",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('day', created_at) AS time, count(DISTINCT session_id) AS conversations FROM interaction_logs GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Temps de réponse moyen (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT date_trunc('hour', created_at) AS time, avg(latency_ms) AS avg_latency_ms FROM interaction_logs GROUP BY 1 ORDER BY 1",
+          "format": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Taux d'erreur de l'agent (%)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT 100.0 * count(*) FILTER (WHERE error IS NOT NULL) / GREATEST(count(*), 1) AS error_rate FROM interaction_logs WHERE created_at > now() - interval '7 days'",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Coût OpenAI estimé (USD, cumulé 7j)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT sum(estimated_cost_usd) AS total_cost FROM interaction_logs WHERE created_at > now() - interval '7 days'",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Satisfaction utilisateur (% positif)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT 100.0 * count(*) FILTER (WHERE rating = 1) / GREATEST(count(*), 1) AS satisfaction_pct FROM user_feedback WHERE created_at > now() - interval '7 days'",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Top 10 produits recherchés (via search_products)",
+      "type": "bargauge",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT jsonb_array_elements(retrieved_context::jsonb) ->> 'product_name' AS product_name, count(*) AS times_searched FROM interaction_logs WHERE retrieved_context IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 10",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Répartition des outils appelés",
+      "type": "piechart",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "postgres", "uid": "PostgreSQL" },
+      "targets": [
+        {
+          "rawSql": "SELECT jsonb_array_elements(tools_called::jsonb) ->> 'name' AS tool_name, count(*) AS calls FROM interaction_logs WHERE tools_called IS NOT NULL AND tools_called != '[]' GROUP BY 1 ORDER BY 2 DESC",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

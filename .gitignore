@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+data/*.csv
+data/evaluation_dataset.json
+data/eval_results/
+!data/.gitkeep
+.DS_Store
+coro.ipynb
