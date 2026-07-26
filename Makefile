@@ -13,10 +13,10 @@ ingest:
 	python scripts/ingest.py
 
 evaluate-retrieval:
-	python scripts/evaluate.py --mode retrieval
+	uv run python scripts/evaluate.py --mode retrieval
 
 evaluate-llm:
-	python scripts/evaluate.py --mode llm
+	uv run python scripts/evaluate.py --mode llm
 
 test:
 	pytest tests/ -v

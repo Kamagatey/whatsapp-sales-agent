@@ -29,6 +29,9 @@ dependencies = [
 dev = ["pytest==8.3.3"]
 orchestration = ["prefect>=2.20"]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 # Ceci est une application (app/, scripts/), pas une librairie à publier :
 # on dit à uv de ne pas essayer de la construire/installer comme package.
 [tool.uv]

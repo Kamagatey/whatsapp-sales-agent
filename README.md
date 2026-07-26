@@ -124,8 +124,11 @@ python scripts/ingest.py                 # ingère dans Postgres + construit les
 
 ```bash
 python scripts/evaluate.py --mode retrieval   # compare BM25 / vector / hybrid (hit-rate, MRR)
+#docker compose exec api python scripts/evaluate.py --mode llm
+#docker compose exec api python scripts/evaluate.py --mode retrieval
 python scripts/evaluate.py --mode llm         # compare prompts/modèles sur le dataset Q/R
 ```
+
 
 Les résultats sont sauvegardés dans `data/eval_results/` et affichés dans les notebooks
 `notebooks/01_retrieval_evaluation.ipynb` et `notebooks/02_llm_evaluation.ipynb`.
