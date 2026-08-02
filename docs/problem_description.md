@@ -1,3 +1,10 @@
+🇫🇷 Français
+(version française)
+
+
+🇬🇧 English
+(English version below)⬇️
+
 # Description du problème
 
 ## Contexte
@@ -40,3 +47,44 @@ quelques villes/quartiers.
 - Paiement en ligne intégré (mobile money) — commandes créées en statut "en attente".
 - Génération/édition d'images produits.
 - Support multi-vendeurs avec authentification avancée (un seul vendeur de démonstration).
+
+🇬🇧 English (English version)
+
+# Problem Description
+
+## Context
+
+In Côte d'Ivoire and more broadly in West Africa, WhatsApp is the main sales channel for a very large number of small retailers (fashion, shoes, cosmetics, phones, accessories). The purchasing journey takes place almost entirely through conversation: product photos, customer questions, negotiation, order placement, delivery.
+
+## Observed Pain Points
+
+* The seller manually responds to dozens of similar messages every day
+  ("how much is it?", "do you have size 42?", "do you deliver to Yopougon?").
+* Responses are slow outside business hours → lost customers.
+* Real stock availability is not always reflected in the answers provided (errors, overselling).
+* No structured record of orders: tracking is done "manually" in the seller's head
+  or in a notebook.
+
+## Product Objective
+
+Provide a conversational assistant that:
+
+1. Immediately answers frequent questions (product, price, size, color, delivery)
+   by relying only on real catalog data (no price or availability hallucination).
+2. Uses tools (function calling) to check stock, consult customer history,
+   and create an order in a structured database.
+3. Remains available 24/7, with responses written in the tone of an Ivorian human seller.
+4. Provides the seller with a monitoring view (dashboard) of conversations, the most requested
+   products, and the perceived quality of responses.
+
+## Target Audience
+
+Small online sellers (1 to a few employees) operating mainly through WhatsApp, with
+a catalog of a few hundred references and limited delivery areas covering
+a few cities/neighborhoods.
+
+## Non-Objectives (out of scope for this version)
+
+* Integrated online payment (mobile money) — orders are created with "pending" status.
+* Product image generation/editing.
+* Multi-seller support with advanced authentication (a single demo seller only).
