@@ -53,14 +53,33 @@ if prompt := st.chat_input("Écrivez comme un client sur WhatsApp..."):
                 if data["tools_called"]:
                     st.caption(f"Outils utilisés : {', '.join(data['tools_called'])} · "
                                f"{data['latency_ms']} ms")
+                st.session_state.last_log_id = data["interaction_log_id"]
             except Exception as exc:
                 data = {"response": f"Erreur : {exc}"}
                 st.error(data["response"])
 
     st.session_state.messages.append({"role": "assistant", "content": data["response"]})
 
+    def send_feedback(rating: int):
+        if not st.session_state.last_log_id:
+            return
+        try:
+            requests.post(
+                f"{API_BASE_URL}/feedback",
+                json={
+                    "interaction_log_id": st.session_state.last_log_id,
+                    "session_id": st.session_state.session_id,
+                    "rating": rating,
+                },
+                timeout=10,
+            )
+        except Exception:
+            pass
+
     col1, col2 = st.columns(2)
     if col1.button("👍 Bonne réponse"):
+        send_feedback(1)
         st.toast("Merci pour votre retour !")
     if col2.button("👎 Mauvaise réponse"):
+        send_feedback(-1)
         st.toast("Merci, nous allons améliorer l'assistant.")

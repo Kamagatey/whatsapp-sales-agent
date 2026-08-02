@@ -1,27 +1,29 @@
-# Assistant Commercial WhatsApp Intelligent — Petits Vendeurs (Côte d'Ivoire)
+# WhatsApp Sales Assistant — Small Sellers (Côte d'Ivoire)
 
-Projet réalisé dans le cadre de la certification **LLM Zoomcamp** (DataTalksClub).
+Built for the **LLM Zoomcamp** certification (DataTalksClub).
 
-Un agent conversationnel LLM qui répond aux clients d'un petit vendeur ivoirien sur WhatsApp
-(disponibilité, prix, tailles, livraison, commandes) en s'appuyant sur un pipeline RAG hybride
-(vector + BM25) et des outils (function calling) connectés à une base PostgreSQL.
+🇫🇷 [Version française](README.fr.md)
 
-Projet exemple d'inspiration : [Fitness Assistant — LLM Zoomcamp 07-project-example](https://github.com/DataTalksClub/llm-zoomcamp/tree/main/07-project-example)
+An LLM-powered conversational agent that answers customers on WhatsApp for a small Ivorian
+seller (product availability, price, sizes, delivery, orders), backed by a hybrid RAG
+pipeline (vector + BM25) and function-calling tools connected to PostgreSQL.
+
+Inspiration project: [Fitness Assistant — LLM Zoomcamp 07-project-example](https://github.com/DataTalksClub/llm-zoomcamp/tree/main/07-project-example)
 
 ---
 
-## 1. Problème
+## 1. Problem
 
-Voir `docs/problem_description.md` pour le contexte complet. En résumé : les petits vendeurs
-ivoiriens gèrent leurs ventes sur WhatsApp manuellement, ce qui coûte du temps, génère des
-réponses incohérentes et fait perdre des clients. Cet assistant automatise les échanges
-courants (info produit, stock, livraison, prise de commande) tout en évitant les hallucinations :
-le LLM ne répond qu'à partir des données réelles récupérées via RAG et des outils.
+See [`docs/problem_description.md`](docs/problem_description.md) for full context.
+In short: small Ivorian sellers manage sales on WhatsApp manually, which wastes time,
+produces inconsistent answers, and loses customers. This assistant automates common
+exchanges (product info, stock, delivery, placing orders) while avoiding hallucinations:
+the LLM only answers from real data retrieved via RAG and tools.
 
 ## 2. Architecture
 
 ```
-Client WhatsApp (simulé via Streamlit / API)
+WhatsApp client (simulated via Streamlit / API)
         │
         ▼
    FastAPI (app/api)
@@ -30,38 +32,38 @@ Client WhatsApp (simulé via Streamlit / API)
    Agent Loop (app/agent)  ──uses──▶  Tools (app/tools): search_products, check_stock,
         │                              create_order, get_customer_history
         ▼
-   Retrieval hybride (app/retrieval): BM25 + vector (pgvector) + fusion
+   Hybrid retrieval (app/retrieval): BM25 + vector (pgvector) + fusion
         │
         ▼
-   PostgreSQL (produits, clients, commandes, conversations, logs monitoring)
+   PostgreSQL (products, customers, orders, conversations, monitoring logs)
 ```
 
-Pipeline d'ingestion : `scripts/generate_data.py` → `scripts/ingest.py` (nettoyage →
-documents → embeddings → pgvector + index BM25).
+Ingestion pipeline: `scripts/generate_data.py` → `scripts/ingest.py` (cleaning →
+documents → embeddings → pgvector + BM25 index).
 
-## 3. Stack technique
+## 3. Tech stack
 
-| Composant | Choix | Justification |
+| Component | Choice | Rationale |
 |---|---|---|
-| LLM | OpenAI (`gpt-4o-mini` par défaut, configurable) | structured output + function calling matures |
-| Backend | FastAPI + Pydantic | typage strict, docs auto (OpenAPI), async |
-| DB | PostgreSQL + pgvector | une seule base pour données métier et vecteurs |
-| Recherche texte | BM25 (`rank_bm25`) | simple, robuste sur peu de documents, pas d'infra dédiée |
-| Recherche vectorielle | `text-embedding-3-small` + pgvector | bon rapport coût/qualité |
-| Orchestration ingestion | script Python (+ hook Prefect optionnel, voir `scripts/prefect_flow.py`) | reproductible sans infra lourde |
-| Interface | Streamlit (simulateur WhatsApp) + FastAPI (API brute) | démonstration interactive + intégration programmatique |
-| Monitoring | Postgres (logs) + Grafana (dashboards) | feedback utilisateur + observabilité agent |
-| Conteneurisation | Docker + docker-compose | reproductibilité totale |
+| LLM | OpenAI (`gpt-4o-mini` by default, configurable) | mature structured output + function calling |
+| Backend | FastAPI + Pydantic | strict typing, auto docs (OpenAPI), async |
+| DB | PostgreSQL + pgvector | one database for business data and vectors |
+| Text search | BM25 (`rank_bm25`) | simple, robust on a few hundred documents, no extra infra |
+| Vector search | `text-embedding-3-small` + pgvector | good cost/quality ratio |
+| Ingestion orchestration | Python script (+ optional Prefect hook, see `scripts/prefect_flow.py`) | reproducible without heavy infra |
+| Interface | Streamlit (WhatsApp simulator) + FastAPI (raw API) | interactive demo + programmatic integration |
+| Monitoring | Postgres (logs) + Grafana (dashboards) | user feedback + agent observability |
+| Containerization | Docker + docker-compose | full reproducibility |
 
 ## 4. Installation
 
-### Prérequis
+### Prerequisites
 - Docker & docker-compose
-- Une clé API OpenAI
+- An OpenAI API key
 
-### Variables d'environnement
+### Environment variables
 
-Copier `.env.example` en `.env` et renseigner :
+Copy `.env.example` to `.env` and fill in at least:
 
 ```
 OPENAI_API_KEY=sk-...
@@ -74,64 +76,59 @@ POSTGRES_HOST=db
 POSTGRES_PORT=5432
 ```
 
-### Environnement Python (avec uv)
+WhatsApp variables (Meta / Twilio) are detailed in section 7.
 
-Le projet fournit `requirements.txt` (utilisé par les Dockerfiles) et un `pyproject.toml`
-équivalent pour `uv`. Les deux sont interchangeables ; utilise celui que tu préfères.
+### Python environment (with uv)
+
+The project ships both `requirements.txt` (used by the Dockerfiles) and an equivalent
+`pyproject.toml` for `uv`. Either works; use whichever you prefer.
 
 ```bash
 uv venv
 source .venv/bin/activate
 uv pip install -r requirements.txt
-# ou, de façon équivalente avec pyproject.toml :
+# or, equivalently:
 uv sync
 ```
 
-Rien d'autre à adapter dans le code : `uv` ne change que la façon d'installer les
-dépendances, pas la structure du projet ni les imports.
-
-### Lancement complet
+### Running everything
 
 ```bash
-docker compose up --build
-docker compose up -d db      # s'assurer que la base tourne
-docker compose exec api python scripts/ingest.py
+docker compose up --build -d
 ```
 
+This starts:
+- `db`: PostgreSQL + pgvector
+- `api`: FastAPI on http://localhost:8000 (docs at `/docs`)
+- `streamlit`: test interface on http://localhost:8501
+- `grafana`: dashboards on http://localhost:3000 (admin/admin)
 
-Cela démarre :
-- `db` : PostgreSQL + pgvector
-- `api` : FastAPI sur http://localhost:8000 (docs sur `/docs`)
-- `streamlit` : interface de test sur http://localhost:8501
-- `grafana` : dashboards sur http://localhost:3000 (admin/admin)
-
-### Arret du conteneur
-
+To stop:
 ```bash
 docker compose down
 ```
 
-### Génération des données (à faire une fois, avant le premier lancement ou en local)
+### Data generation and ingestion (once, after the first startup)
 
 ```bash
-pip install -r requirements.txt
-python scripts/generate_data.py          # génère data/products.csv, customers.csv, orders.csv
-python scripts/generate_eval_dataset.py  # génère data/evaluation_dataset.json
-python scripts/ingest.py                 # ingère dans Postgres + construit les index
+docker compose exec api python scripts/generate_data.py          # generates data/products.csv, customers.csv, orders.csv
+docker compose exec api python scripts/generate_eval_dataset.py  # generates data/evaluation_dataset.json
+docker compose exec api python scripts/ingest.py                 # ingests into Postgres + builds indexes
 ```
 
-### Évaluation retrieval & LLM
+> If you'd rather run these scripts locally (outside the container), prefix the command
+> with `POSTGRES_HOST=localhost`, since `db` only resolves inside the docker-compose
+> network.
+
+### Retrieval & LLM evaluation
 
 ```bash
-python scripts/evaluate.py --mode retrieval   # compare BM25 / vector / hybrid (hit-rate, MRR)
-#docker compose exec api python scripts/evaluate.py --mode llm
-#docker compose exec api python scripts/evaluate.py --mode retrieval
-python scripts/evaluate.py --mode llm         # compare prompts/modèles sur le dataset Q/R
+docker compose exec api python scripts/evaluate.py --mode retrieval   # compares BM25 / vector / hybrid (hit-rate, MRR)
+docker compose exec api python scripts/evaluate.py --mode llm         # compares prompts/models on the Q&A dataset
 ```
 
-
-Les résultats sont sauvegardés dans `data/eval_results/` et affichés dans les notebooks
-`notebooks/01_retrieval_evaluation.ipynb` et `notebooks/02_llm_evaluation.ipynb`.
+Results are saved to `data/eval_results/` and displayed in the notebooks
+`notebooks/01_retrieval_evaluation.ipynb` and `notebooks/02_llm_evaluation.ipynb`.
 
 ### Tests
 
@@ -139,57 +136,67 @@ Les résultats sont sauvegardés dans `data/eval_results/` et affichés dans les
 pytest tests/
 ```
 
-## 5. Structure du dépôt
+## 5. Repository structure
 
 ```
 whatsapp-sales-agent/
 ├── app/
-│   ├── api/            # FastAPI (routes, schémas de requête/réponse)
-│   ├── agent/           # boucle agent, prompts, orchestration des tools
-│   ├── retrieval/        # BM25, vector search, fusion hybride
-│   ├── tools/            # implémentation des tools appelés par le LLM
-│   ├── database/         # modèles SQLAlchemy, session, config
-│   └── monitoring/        # logging des interactions, calcul de métriques
-├── data/                # csv générés, dataset d'évaluation, résultats
-├── notebooks/           # exploration, évaluation retrieval/LLM
+│   ├── api/            # FastAPI (routes, WhatsApp webhooks, schemas)
+│   ├── agent/           # agent loop, prompts, tool orchestration
+│   ├── retrieval/        # BM25, vector search, hybrid fusion
+│   ├── tools/            # tool implementations called by the LLM
+│   ├── database/         # SQLAlchemy models, session, config
+│   └── monitoring/        # interaction logging, metrics computation
+├── data/                # generated CSVs, evaluation dataset, results
+├── notebooks/           # exploration, retrieval/LLM evaluation
 ├── scripts/             # generate_data, ingest, evaluate, prefect_flow
-├── monitoring/grafana/  # provisioning des dashboards Grafana
-├── streamlit_app.py     # simulateur WhatsApp
+├── monitoring/grafana/  # Grafana dashboard provisioning
+├── streamlit_app.py     # WhatsApp simulator
 ├── docker-compose.yml
 ├── Dockerfile
 └── requirements.txt
 ```
 
-## 6. Grille d'évaluation LLM Zoomcamp — auto-évaluation
+## 6. Real WhatsApp integration
 
-| Critère | Statut | Où |
-|---|---|---|
-| Problem description | ✅ | `docs/problem_description.md`, section 1 |
-| Retrieval pipeline (KB + LLM) | ✅ | `app/retrieval/`, `app/agent/` |
-| Retrieval evaluation (≥2 approches) | ✅ | `scripts/evaluate.py --mode retrieval` |
-| LLM evaluation (≥2 approches) | ✅ | `scripts/evaluate.py --mode llm` |
-| Interface (API ou UI) | ✅ | FastAPI + Streamlit |
-| Ingestion pipeline automatisée | ✅ | `scripts/ingest.py` (+ `scripts/prefect_flow.py`) |
-| Monitoring (feedback + dashboard ≥5 graphiques) | ✅ | `app/monitoring/`, Grafana |
-| Conteneurisation (app + DB) | ✅ | `docker-compose.yml` |
-| Reproductibilité (README complet) | ✅ | ce fichier |
-| Bonus : logs coût/contexte/réponse | ✅ | `app/monitoring/logger.py` |
-| Bonus : préparation déploiement cloud | ✅ | `docs/deployment.md` |
+Three integrations coexist in the project, each in its own FastAPI router
+(`app/api/whatsapp_webhook.py`, `app/api/twilio_webhook.py`, `app/api/whapi_webhook.py`),
+all wired in parallel in `app/api/main.py` without interfering with each other. Full
+detail and step-by-step guide: [`docs/whatsapp_integration.md`](docs/whatsapp_integration.md).
+Summary:
 
-## 7. Intégration WhatsApp réelle
+### Meta WhatsApp Cloud API (chosen, free, official)
 
-`app/api/whatsapp_webhook.py` est une intégration fonctionnelle avec la **WhatsApp Cloud
-API** de Meta (pas un simple stub) : réception des messages entrants, appel de
-`SalesAgent`, envoi de la réponse via l'API Graph. Voir **`docs/whatsapp_integration.md`**
-pour :
-- la comparaison avec les alternatives (Twilio, Baileys/whatsapp-web.js, OpenClaw, etc.)
-  et pourquoi la Cloud API de Meta a été retenue ;
-- le guide pas-à-pas pour connecter un numéro de test gratuit en quelques minutes.
+The primary integration. How it works:
+1. Create an app on [developers.facebook.com](https://developers.facebook.com), choosing
+   the *"Connect with your customers on WhatsApp"* option, and add the WhatsApp product.
+2. Meta provides a free test number + a `Phone Number ID` + a temporary access token
+   (24h — use a System User token for longer-lived access).
+3. Add these to `.env`:
+```
+   WHATSAPP_VERIFY_TOKEN=a-secret-you-choose
+   WHATSAPP_ACCESS_TOKEN=...
+   WHATSAPP_PHONE_NUMBER_ID=...
+   WHATSAPP_API_VERSION=v21.0
+```
+4. Expose the API over HTTPS (`ngrok http 8000` in dev), register the URL
+   `https://<domain>/whatsapp/webhook` under **API Setup → Production configuration →
+   Webhooks**, with the same verify token.
+5. Explicitly subscribe to the **`messages`** field under "Webhook fields".
+6. **Step that's easy to miss with Meta's newer UI (late 2025 change)**: verifying the
+   URL and subscribing to `messages` isn't always enough — you also need to subscribe
+   the app to the WABA directly via the Graph API:
+```bash
+   curl -X POST "https://graph.facebook.com/v21.0/<WHATSAPP_BUSINESS_ACCOUNT_ID>/subscribed_apps" \
+     -H "Authorization: Bearer <TOKEN>"
+```
+   Without this, incoming messages never reach the webhook despite an apparently
+   correct configuration.
+7. Add test numbers under **"Manage phone number list"**, confirmed via a WhatsApp code.
 
-## 8. Limites connues / prochaines étapes
 
-- Les données sont synthétiques (générées par LLM) : à remplacer par un export réel du vendeur.
-- Le numéro de test Meta est limité à 5 destinataires vérifiés ; passage en prod détaillé
-  dans `docs/deployment.md`.
-- Les coûts OpenAI ne sont pas plafonnés automatiquement ; `app/monitoring/logger.py` calcule
-  un coût estimé par appel à ajuster selon les prix en vigueur.
+## 7. Known limitations / next steps
+
+- Data is synthetic (LLM-generated): should be replaced with a real export from the seller.
+- The Meta test number is limited to 5 verified recipients; production rollout is
+  detailed in [`docs/deployment.md`](docs/deployment.md).
