@@ -47,6 +47,7 @@ def verify_webhook(
 
 def send_whatsapp_message(to_phone: str, text: str) -> dict:
     """Envoie un message texte via l'API Graph de Meta (WhatsApp Cloud API)."""
+    print(f"DEBUG - Envoi WhatsApp vers: '{to_phone}'", flush=True)
     if not settings.whatsapp_access_token or not settings.whatsapp_phone_number_id:
         logger.warning("WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID non configurés — envoi ignoré.")
         return {"skipped": True}

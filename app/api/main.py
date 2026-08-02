@@ -7,12 +7,17 @@ from sqlalchemy.orm import Session
 
 from app.agent.agent import SalesAgent
 from app.api.whatsapp_webhook import router as whatsapp_router
+from app.api.twilio_webhook import router as twilio_router
 from app.database.models import Conversation, Product, UserFeedback
 from app.database.session import get_db, init_db
 from app.schemas import ChatRequest, ChatResponse, FeedbackRequest
+from app.api.whapi_webhook import router as whapi_router
+
 
 app = FastAPI(title="Assistant Commercial WhatsApp", version="1.0.0")
 app.include_router(whatsapp_router)
+app.include_router(twilio_router)
+app.include_router(whapi_router)
 
 
 @app.on_event("startup")
@@ -44,6 +49,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         retrieval_method=result["retrieval_method"],
         tools_called=result["tools_called"],
         latency_ms=result["latency_ms"],
+        interaction_log_id=result["interaction_log_id"],
     )
 
 

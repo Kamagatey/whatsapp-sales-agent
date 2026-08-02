@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     whatsapp_phone_number_id: str = ""
     whatsapp_api_version: str = "v21.0"
 
+    # Twilio WhatsApp (mode "Try out WhatsApp")
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_whatsapp_from: str = ""
+    # Whapi.Cloud (alternative sans Meta ni Twilio)
+    whapi_token: str = ""
     @property
     def database_url(self) -> str:
         return (

@@ -75,6 +75,7 @@ class ChatResponse(BaseModel):
     retrieval_method: str
     tools_called: List[str] = Field(default_factory=list)
     latency_ms: int
+    interaction_log_id: int
 
 
 class FeedbackRequest(BaseModel):
