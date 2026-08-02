@@ -2,7 +2,7 @@
 
 Built for the **LLM Zoomcamp** certification (DataTalksClub).
 
-🇫🇷 [Version française](README.fr.md)
+🇫🇷 [Version française](README_fr.md)
 
 An LLM-powered conversational agent that answers customers on WhatsApp for a small Ivorian
 seller (product availability, price, sizes, delivery, orders), backed by a hybrid RAG
