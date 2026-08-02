@@ -56,15 +56,3 @@ C'est l'option la plus pertinente ici car :
 
 Voir `docs/deployment.md`. Il faudra : vérification business Meta, un numéro dédié, et
 un token permanent stocké en secret manager plutôt qu'en `.env`.
-
-## Pourquoi pas OpenClaw dans ce projet
-
-OpenClaw (et les outils similaires type Clawbase) sont conçus pour donner à **un agent
-générique** un canal WhatsApp "clé en main", en installant des *skills* dans leur propre
-écosystème. Ici, le projet a volontairement construit son propre pipeline (RAG hybride,
-tools métier, monitoring, évaluation) pour répondre à la grille LLM Zoomcamp — faire
-transiter cet agent par une couche d'orchestration tierce ajouterait de la complexité et
-une dépendance externe sans réel gain, puisque le besoin (recevoir un message, appeler
-l'agent, renvoyer la réponse) est déjà couvert par un simple webhook Meta. OpenClaw
-redeviendrait pertinent si, à terme, on voulait exposer le même agent sur plusieurs canaux
-(Telegram, Slack, Discord) sans dupliquer le code de webhook pour chacun.
